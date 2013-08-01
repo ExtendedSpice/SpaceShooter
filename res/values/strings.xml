@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">Space Shooter 9000</string>
+    <string name="option1_name">Vibration</string>
+    <string name="option2_name">Sounds</string>
+    <string name="button_launch_text">Start battle</string>
+
+</resources>

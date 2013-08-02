@@ -11,75 +11,84 @@ import android.graphics.Color;
 import android.graphics.Point;
 import android.os.CountDownTimer;
 import android.os.SystemClock;
+import android.view.MotionEvent;
 import android.view.View;
 
-public class MenuScene {
+public class GScene implements View.OnTouchListener{
+
 	private View sceneView;
     private Point display;
 
-    private boolean isActive = false;
+    private boolean continueRedrawing = false;
+    private boolean continueUpdating = false;
 
-    //private System.Timers.Timer timerU;
     private SSTimer timer;
     private float FRAMETIME = 16;
 
-    //private long timeTouch = 0;
     private long timeDraw = 0;
     private long timeUpdate = 0;
 
-    public MenuScene(View contentView, Point d)
+    public GScene(View contentView, Point d)
     {
         display = d;
         sceneView = contentView;
 
         timer = new SSTimer((long)FRAMETIME, this);
-        //timerU = new System.Timers.Timer(FRAMETIME);
-        //timerU.Elapsed += Update;
 
         GUI.SetScreen(display.x, d.y);
         GUI.Initialize();
 
         Camera.SetDisplay(display.x, d.y);
         Camera.AddBackground(40);
+        
         ClearScene();
     }
 
-    public void AddNewShip(Model newType, Color shipColor)
+    public void SeedForGamePlay(){
+    	// Dummy-controlled ships
+    	SSS.AddNewShip(Generic.startupShip, 
+    			Generic.RND.nextInt(1001)-500, Generic.RND.nextInt(1001)-500, Generic.RND.nextInt(361), 
+    			new Color(), false, true);
+    	
+    	// Player-controlled
+    	SSS.AddNewShip(Generic.startupShip, 0, 0, -90f, new Color(), true, false);
+    }
+    
+    public void AddNewShip(Model newType, Color shipColor, boolean isDummy, boolean isGUILinked)
     {
-        SSS.RemoveOldController();
-        SSS.AddNewShip(newType, display.x / 2f, display.y / 2f, -90f, shipColor, true, true);
+        SSS.AddNewShip(newType, 0, 0, -90f, shipColor, isGUILinked, isDummy);        
     }
 
     public void ClearScene()
     {
+        SSS.Reset();
+        Particles.Clear();
         GUI.Initialize();
         Camera.Init();
-        //if(Generic.clearScene){
-            SSS.Reset();
-            Particles.Clear();
-        //}
     }
     
-    public void Start()
-    {
-        if (!isActive)
-        {
-            isActive = true;
+    public void SetState(boolean active, boolean shown){
+    	if(!continueUpdating && active)
             timer.start();
-            //timerU.Start();
-        }
+    	
+    	continueUpdating = active;
+    	continueRedrawing = shown;
     }
-    
-    public void Close(){
-    	isActive = false;
-    }
-    
+
+	@Override
+	public boolean onTouch(View v, MotionEvent event) {
+			GUI.HandleTouchEvent(event);
+		return true;
+	}		
+
     private void Update()//object sender, System.Timers.ElapsedEventArgs e)
     {
         this.timeUpdate = SystemClock.elapsedRealtime();
         
         SSS.Update(FRAMETIME);
         Particles.Update(FRAMETIME);
+
+        SSS.CheckCollisions(Particles.GetShellObjects());
         SSS.UpdateWithRelMatrix();
         
         this.timeUpdate = SystemClock.elapsedRealtime() - timeUpdate;
@@ -98,19 +107,20 @@ public class MenuScene {
         this.timeDraw = SystemClock.elapsedRealtime();
 
         GUI.Draw(canvas);
-
         canvas.translate(-Camera.viewX , -Camera.viewY );
+        
+        Camera.DrawBackground(canvas);
         SSS.Draw(canvas);
         Particles.Draw(canvas); //Prts после SS - это важно UPD.Ќаверное UPD уже не важно
-        Camera.DrawBackground(canvas);
+        Camera.DrawNavArrows(canvas);
 
         this.timeDraw = SystemClock.elapsedRealtime() - timeDraw;
     }
     
     private class SSTimer extends CountDownTimer
     {
-    	MenuScene ownerScene;
-        public SSTimer(long a, MenuScene owner)
+    	GScene ownerScene;
+        public SSTimer(long a, GScene owner)
         {
         	super(a,a*2);
             this.ownerScene = owner;
@@ -118,11 +128,11 @@ public class MenuScene {
 
 		@Override
 		public void onFinish() {
-
-            if (ownerScene.isActive){
+            if (ownerScene.continueUpdating){
                 this.start();
 	            ownerScene.Update();
-	            ownerScene.sceneView.invalidate();
+	            if (ownerScene.continueRedrawing)
+	            	ownerScene.sceneView.invalidate();
             }			
 		}
 

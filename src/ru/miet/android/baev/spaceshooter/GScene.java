@@ -48,7 +48,7 @@ public class GScene implements View.OnTouchListener{
     	// Dummy-controlled ships
     	SSS.AddNewShip(Generic.startupShip, 
     			Generic.RND.nextInt(1001)-500, Generic.RND.nextInt(1001)-500, Generic.RND.nextInt(361), 
-    			new Color(), false, true);
+    			new Color(), true, true); //false, true); момент пока закостылен
     	
     	// Player-controlled
     	SSS.AddNewShip(Generic.startupShip, 0, 0, -90f, new Color(), true, false);
@@ -61,6 +61,8 @@ public class GScene implements View.OnTouchListener{
 
     public void ClearScene()
     {
+    	//timer.cancel();
+    	
         SSS.Reset();
         Particles.Clear();
         GUI.Initialize();
@@ -130,7 +132,13 @@ public class GScene implements View.OnTouchListener{
 		public void onFinish() {
             if (ownerScene.continueUpdating){
                 this.start();
+                try{
 	            ownerScene.Update();
+                }
+                catch(NullPointerException e){
+                	// ололо исключение, в котором разобраться не позволяет кривой отладчик эклипс
+                }
+                
 	            if (ownerScene.continueRedrawing)
 	            	ownerScene.sceneView.invalidate();
             }			

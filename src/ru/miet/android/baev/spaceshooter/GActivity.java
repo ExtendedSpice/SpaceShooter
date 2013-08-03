@@ -97,13 +97,10 @@ public class GActivity extends Activity implements OnClickListener{
 		if(v.getTag() == null){
 			if(Generic.startupShip!= null){
 				gScene.SetState(false, false);
-				gScene.ClearScene();
 				Generic.setVibrations(((ToggleButton)findViewById(R.id.toggleButton1)).isChecked());
 				Sounds.setSounds(((ToggleButton)findViewById(R.id.toggleButton2)).isChecked());
-				//Generic.clearScene = ((ToggleButton)findViewById(R.id.toggleButton2)).isChecked();
 				
-				//startActivity(new Intent(this,ActivityGame.class));
-				//setContentView(R.layout.activity_menu);
+				gScene.ClearScene();
 				startAsGame();
 			}
 		}
